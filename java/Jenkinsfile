@@ -1,0 +1,59 @@
+pipeline {
+  agent any
+
+  environment {
+    MAVEN_OPTS = '-Dmaven.test.failure.ignore=false'
+    APP_NAME   = 'spring-boot-demo'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'mvn -B clean package'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        sh 'mvn test'
+      }
+    }
+
+    stage('Archive JAR') {
+      steps {
+        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+      }
+    }
+
+    stage('Docker Build & Push') {
+	  when { branch 'main' }
+	  environment {
+	    IMAGE = "registry.example.com/nextjs-demo:${env.BUILD_NUMBER}"
+	  }
+	  steps {
+		withCredentials([usernamePassword(credentialsId: 'REGISTRY_CREDS', usernameVariable: 'USR', passwordVariable: 'PWD')]) {
+		  sh """
+		    echo "$PWD" | docker login registry.example.com -u "$USR" --password-stdin
+			docker build -t $IMAGE .
+			docker push $IMAGE
+		  """
+	    }
+	  }
+    }
+  }
+
+  post {
+    success {
+      echo "✅ Spring Boot build completed. Artifact stored in target/."
+    }
+    failure {
+      echo "❌ Build failed!"
+    }
+  }
+}

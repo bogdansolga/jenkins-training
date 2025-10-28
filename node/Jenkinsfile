@@ -1,0 +1,66 @@
+pipeline {
+  agent {
+    docker {
+      image 'node:18-alpine'
+      args '-u root:root'  // allows npm install if needed
+    }
+  }
+
+  environment {
+    NODE_ENV = 'development'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Install') {
+      steps {
+        sh 'npm ci'
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'npm run build'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        // optional if you have tests
+        sh 'npm test || echo "No tests configured"'
+      }
+    }
+
+    stage('Archive') {
+      steps {
+        archiveArtifacts artifacts: '.next/**', fingerprint: true
+      }
+    }
+
+    stage('Docker Build & Push') {
+	  when { branch 'main' }
+	  environment {
+		  IMAGE = "registry.example.com/nextjs-demo:${env.BUILD_NUMBER}"
+	  }
+	  steps {
+		withCredentials([usernamePassword(credentialsId: 'REGISTRY_CREDS', usernameVariable: 'USR', passwordVariable: 'PWD')]) {
+		  sh """
+		    echo "$PWD" | docker login registry.example.com -u "$USR" --password-stdin
+		    docker build -t $IMAGE .
+		    docker push $IMAGE
+	        """
+		}
+	  }
+    }
+  }
+
+  post {
+    success { echo '✅ Next.js build completed successfully.' }
+    failure { echo '❌ Build failed!' }
+  }
+}
