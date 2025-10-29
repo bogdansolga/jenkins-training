@@ -1,0 +1,61 @@
+pipeline {
+	agent any
+
+	parameters {
+		booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Deploy to PRE after tests?')
+	}
+
+	environment {
+		APP     = 'demo-app'
+		VERSION = "1.0.${BUILD_NUMBER}"
+	}
+
+	options {
+		skipDefaultCheckout(true)   // Show explicit checkout in the stage
+		timestamps()
+	}
+
+	stages {
+		stage('Checkout') {
+			steps {
+				checkout scm
+			}
+		}
+
+		stage('Build') {
+			steps {
+				sh 'echo "Building..."'
+			}
+		}
+
+		stage('Test') {
+			steps {
+				sh 'echo "Running unit tests..."'
+			}
+		}
+
+		stage('Deploy to PRE') {
+			when {
+				allOf {
+					branch 'main'
+					expression { return params.DEPLOY }
+				}
+			}
+			steps {
+				sh 'echo "Deploying ${APP}:${VERSION} to PRE (staging)..."'
+			}
+		}
+	}
+
+	post {
+		always {
+			echo "Result: ${currentBuild.currentResult}"
+		}
+		success {
+			echo '✅ Pipeline succeeded'
+		}
+		failure {
+			echo '❌ Pipeline failed'
+		}
+	}
+}

@@ -1,0 +1,38 @@
+node {
+	echo "Agent: ${env.NODE_NAME}"
+
+	try {
+		stage('Checkout') {
+			echo "will checkout scm" // can only be used when the file is in the root of a project
+		}
+
+		stage('Build') {
+			steps {
+				echo "Building..."
+			}
+		}
+
+		stage('Test') {
+			echo "Running unit tests..."
+		}
+
+		stage('Package') {
+			def version = "1.0.${env.BUILD_NUMBER}"
+			echo "Packaging demo-app:${version}"
+		}
+
+		stage('Deploy?') {
+			if (env.BRANCH_NAME == 'main') {
+				echo "Deploying to PRE (staging)"
+			} else {
+				echo "Skipping deploy on branch: ${env.BRANCH_NAME}"
+			}
+		}
+	} catch (err) {
+		echo "Build failed: ${err}"
+		currentBuild.result = 'FAILURE'
+		throw err
+	} finally {
+		echo "Always runs (cleanup/notifications)"
+	}
+}
