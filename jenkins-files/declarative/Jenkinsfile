@@ -10,12 +10,16 @@ pipeline {
 		VERSION = "1.0.${BUILD_NUMBER}"
 	}
 
+	// single line documentation
 	options {
 		skipDefaultCheckout(true)   // Show explicit checkout in the stage
 		timestamps()
 	}
 
 	stages {
+		/*
+		multi-line documentation
+		*/
 		stage('Checkout') {
 			steps {
 				checkout scm

@@ -19,7 +19,7 @@ pipeline {
 
     stage('Install') {
       steps {
-        sh 'npm ci'
+        sh 'npm ci' //ci = clean install
       }
     }
 
@@ -42,6 +42,28 @@ pipeline {
       }
     }
 
+    stage('Deploy') {
+	  steps {
+		  nexusArtifactUploader(
+			  nexusVersion: 'nexus3',
+			  protocol: 'http',
+			  nexusUrl: 'ge.nexus.internal',
+			  groupId: 'com.example',
+			  version: version,
+			  repository: 'GreatProject',
+			  credentialsId: 'CredentialsId',
+			  artifacts: [
+				  [
+					  artifactId: projectName,
+					  classifier: '',
+					  file: 'my-service-' + version + '.zip',
+					  type: 'zip'
+				  ]
+			  ]
+		  )
+	  }
+    }
+
     stage('Docker Build & Push') {
 	  when { branch 'main' }
 	  environment {
@@ -62,5 +84,8 @@ pipeline {
   post {
     success { echo '✅ Next.js build completed successfully.' }
     failure { echo '❌ Build failed!' }
+    anyOf {
+	  sendNotification('email') || sendNotification('teams')
+	}
   }
 }

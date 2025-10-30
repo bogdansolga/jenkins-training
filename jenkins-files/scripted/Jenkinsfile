@@ -10,6 +10,7 @@ node {
 			steps {
 				echo "Building..."
 			}
+			throw "oops"
 		}
 
 		stage('Test') {
