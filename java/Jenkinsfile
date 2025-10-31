@@ -33,6 +33,7 @@ pipeline {
 
 	stage('Another stage, to be reviewd') {
 	  steps {
+	    sh "An important script to be executed"
 	    echo "Another test stage"
 	  }
     }

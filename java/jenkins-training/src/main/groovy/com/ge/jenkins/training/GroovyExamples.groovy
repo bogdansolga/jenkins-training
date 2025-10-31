@@ -15,7 +15,20 @@ class GroovyExamples {
     println "Using interpolation - $port"
 
     def envs = ["dev", "qa", "pre"] //array of values
+
+    // functional
     envs.each(env -> println("Deploying to $env..."))
+
+    // imperative
+    for (env in envs) {
+      println("Deploying to $env...")
+    }
     // translation: for each value from envs, print the message
+
+    if (port == 22) {
+      print "Do something"
+    }
+
+    println "env variable value ${System.properties.JAVA_HOME}"
   }
 }
