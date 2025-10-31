@@ -31,6 +31,12 @@ pipeline {
       }
     }
 
+	stage('Another stage, to be reviewd') {
+	  steps {
+	    echo "Another test stage"
+	  }
+    }
+
     stage('Docker Build & Push') {
 	  when { branch 'main' }
 	  environment {
